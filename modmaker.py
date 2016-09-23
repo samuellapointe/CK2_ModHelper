@@ -6,6 +6,9 @@ modPath = "C:/Users/Sam/Desktop/modmaker/northquebec"
 import errno
 import os
 import struct
+import utils
+
+from sets import Set
 
 # Functions
 
@@ -13,9 +16,9 @@ import struct
 def log(status, message):
 	statusString = "[INFO] "
 	if (status == 1):
-		statusString = "[ERROR] "
-	elif (status == 2):
 		statusString = "[WARNING] "
+	elif (status == 2):
+		statusString = "[ERROR] "
 	print(statusString + message)
 	
 # This function checks if file needed to generate the mod is present.
@@ -24,7 +27,7 @@ def checkFiles():
 	try:
 		os.chdir(modPath)
 	except:
-		log(1, "Invalid path, check modPath in modmaker.py")
+		log(2, "Invalid path, check modPath in modmaker.py")
 		print("=====")
 		print(sys.exc_info()[0])
 		
@@ -43,12 +46,13 @@ def checkFiles():
 		if fileExists:
 			log(0, "OK: " + file)
 		else:
-			log(1, "File missing: " + file)
+			log(2, "File missing: " + file)
 			print ("=====")
 			raise IOError(errno.ENOENT, os.strerror(errno.ENOENT), file)
 			
 	print ('------------------------------')
-			
+
+# Parse the provinces.bmp file, find every different province
 def readProvinces():
 	log(0, "Parsing provinces")
 	mapPath = "map/provinces.bmp"
@@ -61,21 +65,33 @@ def readProvinces():
 		imageHeight = struct.unpack_from('<L', data, 22)[0]
 		
 		if (imageWidth != 3072 or imageHeight != 2048):
-			log(2, "Your map size might not be valid. ")
-			log(2, "Recommended is 3072x2048 and yours is " + 
+			log(1, "Your map size might not be valid. ")
+			log(1, "Recommended is 3072x2048 and yours is " + 
 			str(imageWidth) + "x" + str(imageHeight))
 		else:
 			log(0, "OK: Map size is valid")
 		
 		bitsPerPixel = struct.unpack_from('<L', data, 28)[0]
 		if (bitsPerPixel != 24):
-			log(1, "Invalid BMP format")
+			log(2, "Invalid BMP format")
 			errorMsg = "24-bit required, found " + str(bitsPerPixel) + "-bit"
-			log(1, errorMsg)
+			log(2, errorMsg)
 			print("=====")
 			raise ValueError(errorMsg)
 		else:
 			log(0, "OK: BMP is 24-bit")
+		
+		nbPixels = imageWidth*imageHeight
+		lastPixel = offset+nbPixels
+		colorSet = Set()
+		
+		while (offset < lastPixel):
+			color = (data[offset+2], data[offset+1], data[offset])
+			colorSet.add(color)
+			offset+=3
+		
+		for color in colorSet:
+			print color
 			
 	print ('------------------------------')
 	
