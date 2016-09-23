@@ -266,7 +266,7 @@ def generateSeaZones(provinces):
 				str(province.id) + "}\n"
 			)
 	
-	seaZones += "\nocean_region {\n"
+	seaZones += "\nocean_region = {\n"
 	seaZones += "    sea_zones = { "
 	
 	for i in range(1, nbSeaZones + 1):
